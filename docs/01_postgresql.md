@@ -1,6 +1,6 @@
 # Database Creation
 ```sql
-CREATE DATABASE olist_ecommerce;
+CREATE DATABASE ecommerce;
 ```
 
 # Schema Creation
@@ -21,7 +21,7 @@ The schemas were designed to separate raw imported data from analytical objects.
 # Expected Outcome
 The following database structure was established:
 ```text
-olist_ecommerce
+ecommerce
 ├── staging
 └── analytics
 ```
@@ -219,3 +219,175 @@ A composite primary key `(review_id, order_id)` was defined.
 The check constraint ensures that review scores fall within the range from 1 to 5.
 
 Review comments were allowed to contain `NULL` values because not every review necessarily includes written feedback.
+
+
+
+
+# Relational Structure
+
+Foreign key relationships were defined between the following tables:
+
+| Child table | Foreign key | Referenced table |
+| --- | --- | --- |
+| `orders` | `customer_id` | `customers` |
+| `order_items` | `order_id` | `orders` |
+| `order_items` | `product_id` | `products` |
+| `order_items` | `seller_id` | `sellers` |
+| `order_payments` | `order_id` | `orders` |
+| `order_reviews` | `order_id` | `orders` |
+
+The foreign keys help prevent references to non-existent parent records when data is inserted or modified while the constraints are active.
+
+
+
+# CSV Data Import
+The objective of this stage was to import the source CSV files from the Brazilian E-Commerce Public Dataset by Olist into the PostgreSQL `staging` schema.
+
+### Source Data
+
+The following CSV files were imported:
+
+| Source file | Target table | Purpose |
+| --- | --- | --- |
+| `product_category_name_translation.csv` | `staging.product_category_name_translation` | Product category translations. |
+| `geolocation.csv` | `staging.geolocation` | Geographic coordinates and location data. |
+| `customers.csv` | `staging.customers` | Customer records and locations. |
+| `sellers.csv` | `staging.sellers` | Seller records and locations. |
+| `products.csv` | `staging.products` | Product attributes and dimensions. |
+| `orders.csv` | `staging.orders` | Order status and timestamps. |
+| `order_items.csv` | `staging.order_items` | Items, prices, and shipping costs. |
+| `order_payments.csv` | `staging.order_payments` | Payment methods and values. |
+| `order_reviews.csv` | `staging.order_reviews` | Review scores, comments, and timestamps. |
+
+
+### Import Method
+
+The following pattern was used to import the CSV files:
+
+```sql
+COPY staging.customers
+FROM 'D:/olist-ecommerce-analytics/data/raw/customers.csv'
+WITH (
+    FORMAT csv,
+    HEADER true,
+    DELIMITER ',',
+    ENCODING 'UTF8'
+);
+```
+
+The same approach was applied to the remaining source files, with the target table and file path adjusted accordingly.
+
+
+### Import Order
+
+Because foreign key constraints were defined between several tables, the import order must respect the parent-child relationships.
+
+A suitable sequence is:
+
+1. `product_category_name_translation`
+2. `geolocation`
+3. `customers`
+4. `sellers`
+5. `products`
+6. `orders`
+7. `order_items`
+8. `order_payments`
+9. `order_reviews`
+
+
+
+### Import Validation
+#### 1. The first ten records from each table were retrieved using `SELECT *` and `LIMIT 10`.
+
+Example:
+
+```sql
+SELECT *
+FROM staging.customers
+LIMIT 10;
+```
+
+The same pattern was applied to all nine imported tables.
+
+
+#### 2.Record Count Validation
+
+The total number of records in each table was calculated using `COUNT(*)`.
+
+The results were combined into a single result set using `UNION ALL`.
+
+```sql
+SELECT
+    'product_category_name_translation' AS table_name,
+    COUNT(*) AS record_count
+FROM staging.product_category_name_translation
+
+UNION ALL
+
+SELECT
+    'geolocation',
+    COUNT(*)
+FROM staging.geolocation
+
+UNION ALL
+
+SELECT
+    'sellers',
+    COUNT(*)
+FROM staging.sellers
+
+UNION ALL
+
+SELECT
+    'customers',
+    COUNT(*)
+FROM staging.customers
+
+UNION ALL
+
+SELECT
+    'products',
+    COUNT(*)
+FROM staging.products
+
+UNION ALL
+
+SELECT
+    'orders',
+    COUNT(*)
+FROM staging.orders
+
+UNION ALL
+
+SELECT
+    'order_items',
+    COUNT(*)
+FROM staging.order_items
+
+UNION ALL
+
+SELECT
+    'order_payments',
+    COUNT(*)
+FROM staging.order_payments
+
+UNION ALL
+
+SELECT
+    'order_reviews',
+    COUNT(*)
+FROM staging.order_reviews;
+```
+
+
+| Table | Number of Records |
+|---|---:|
+| product_category_name_translation | 71 |
+| sellers | 3,095 |
+| products | 32,951 |
+| order_payments | 103,886 |
+| customers | 99,441 |
+| order_reviews | 99,224 |
+| orders | 99,441 |
+| order_items | 112,650 |
+| geolocation | 1,000,163 |
