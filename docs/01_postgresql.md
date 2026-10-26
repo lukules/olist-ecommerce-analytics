@@ -1,2 +1,4 @@
 # Database Creation
-'CREATE DATABASE olist_ecommerce;'
+```sql
+CREATE DATABASE olist_ecommerce;
+```
