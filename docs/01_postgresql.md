@@ -391,3 +391,22 @@ FROM staging.order_reviews;
 | orders | 99,441 |
 | order_items | 112,650 |
 | geolocation | 1,000,163 |
+
+
+
+
+# Duplicate Records Validation
+
+Duplicate checks were performed on the following tables in the `staging` schema:
+
+- `customers` - `customer_id`
+- `orders` - `order_id`
+- `products` - `product_id`
+- `sellers` - `seller_id`
+- `order_items` - the composite key (`order_id`, `order_item_id`)
+
+Each query grouped records by the relevant primary key or composite key and used `HAVING COUNT(*) > 1` to identify duplicates.
+
+**Result:** No duplicate records were detected in any of the tested tables. All checked keys are unique within their respective tables, indicating that the data passed these duplicate validation checks.
+
+**SQL validation method:** `GROUP BY` and `HAVING COUNT(*) > 1`.
