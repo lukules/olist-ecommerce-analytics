@@ -44,7 +44,9 @@ Stores the mapping between Portuguese product category names and their English t
 
 This table supports consistent category labeling in analytical reports.
 
-#### Geolocation
+
+
+### Geolocation
 
 Table: `staging.geolocation`
 
@@ -61,6 +63,8 @@ Stores geographic information associated with Brazilian postal code prefixes.
 The postal code prefix was stored as text to preserve its identifier format, including potential leading zeros.
 
 No primary key was defined for this table because the source data may contain multiple records associated with the same postal code prefix.
+
+
 
 ### Customers
 
@@ -80,6 +84,8 @@ The distinction between `customer_id` and `customer_unique_id` is important for 
 
 A single real-world customer may be represented by multiple `customer_id` values. Therefore, customer order counts and unique customer counts may differ.
 
+
+
 ### Sellers
 
 Table: `staging.sellers`
@@ -94,6 +100,8 @@ Stores seller identifiers and location information.
 | `seller_state` | `CHAR(2)` | `NOT NULL` | Seller state abbreviation. |
 
 The seller table can later be used to analyze seller performance and geographic distribution.
+
+
 
 ### Products
 
@@ -117,6 +125,8 @@ Several attributes were allowed to contain `NULL` values because missing product
 
 The table can support product category, product catalog, and shipping-related analyses.
 
+
+
 ### Orders
 
 Table: `staging.orders`
@@ -139,6 +149,8 @@ The foreign key references `staging.customers(customer_id)`.
 The timestamp columns support analysis of order processing, delivery performance, and delivery delays.
 
 Nullable timestamps are retained because some orders may not have reached the corresponding processing or delivery stage.
+
+
 
 ### Order Items
 
@@ -164,6 +176,8 @@ Foreign keys connect order items to the corresponding orders, products, and sell
 
 The `price` and `freight_value` columns can be used to calculate product sales value and shipping costs.
 
+
+
 ### Order Payments
 
 Table: `staging.order_payments`
@@ -181,6 +195,8 @@ Stores payment records associated with orders.
 The composite primary key `(order_id, payment_sequential)` allows multiple payment records to be associated with the same order.
 
 This table supports payment method analysis, installment analysis, and comparisons between recorded payments and order values.
+
+
 
 ### Order Reviews
 
