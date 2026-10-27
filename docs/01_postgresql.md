@@ -410,3 +410,46 @@ Each query grouped records by the relevant primary key or composite key and used
 **Result:** No duplicate records were detected in any of the tested tables. All checked keys are unique within their respective tables, indicating that the data passed these duplicate validation checks.
 
 **SQL validation method:** `GROUP BY` and `HAVING COUNT(*) > 1`.
+
+
+# NULL Value Analysis
+The following areas are examined:
+- **Order delivery dates:** Missing customer delivery dates, carrier handover dates, and estimated delivery dates.
+- **Customer and seller location data:** Missing postal code prefixes, city names, and state information.
+- **Product data:** Missing product category information.
+- **Customer reviews:** Missing review scores, comment titles, comment messages, and review timestamps.
+- **Order approval:** Missing order approval timestamps.
+
+```sql
+SELECT
+    'orders' AS table_name,
+    'order_delivered_customer_date' AS column_name,
+    COUNT(*) FILTER (
+        WHERE order_delivered_customer_date IS NULL
+    ) AS missing_values,
+    ROUND(
+        100.0 * COUNT(*) FILTER (
+            WHERE order_delivered_customer_date IS NULL
+        ) / NULLIF(COUNT(*), 0),
+        2
+    ) AS missing_percentage
+FROM staging.orders;
+```
+| table_name | column_name | missing_values | missing_percentage |
+|---|---|---:|---:|
+| customers | customer_city | 0 | 0.00 |
+| customers | customer_zip_code_prefix | 0 | 0.00 |
+| customers | customer_state | 0 | 0.00 |
+| order_reviews | review_answer_timestamp | 0 | 0.00 |
+| order_reviews | review_creation_date | 0 | 0.00 |
+| order_reviews | review_score | 0 | 0.00 |
+| orders | order_estimated_delivery_date | 0 | 0.00 |
+| sellers | seller_state | 0 | 0.00 |
+| sellers | seller_city | 0 | 0.00 |
+| sellers | seller_zip_code_prefix | 0 | 0.00 |
+| orders | order_approved_at | 160 | 0.16 |
+| products | product_category_name | 610 | 1.85 |
+| orders | order_delivered_carrier_date | 1783 | 1.79 |
+| orders | order_delivered_customer_date | 2965 | 2.98 |
+| order_reviews | review_comment_message | 58247 | 58.70 |
+| order_reviews | review_comment_title | 87656 | 88.34 |
