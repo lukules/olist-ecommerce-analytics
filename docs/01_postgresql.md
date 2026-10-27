@@ -454,7 +454,7 @@ FROM staging.orders;
 | order_reviews | review_comment_message | 58247 | 58.70 |
 | order_reviews | review_comment_title | 87656 | 88.34 |
 
-#### Missing Delivery Dates
+## Missing Delivery Dates
 The analysis of missing order_delivered_customer_date values revealed a strong relationship between delivery date completeness and order status.
 ```sql 
 SELECT
@@ -489,3 +489,18 @@ ORDER BY missing_delivery_percentage DESC;
 - Canceled orders: 619 out of 625 canceled orders (99.04%) had no recorded customer delivery date. This is generally consistent with canceled orders not completing the delivery process. However, six canceled orders had a recorded delivery date and require further investigation.
 
 - Delivered orders: Only 8 out of 96,478 delivered orders (approximately 0.01%) had a missing customer delivery date. These records were identified as potential data quality anomalies because their status indicates that delivery was completed.
+
+### Investigation of Inconsistent Delivery Dates
+As part of the data quality audit, records with potentially inconsistent order statuses and delivery dates were investigated.
+
+#### Delivered Orders with Missing Customer Delivery Dates
+
+Eight orders marked as delivered had a missing order_delivered_customer_date.
+- 7 orders had a recorded order_delivered_carrier_date, indicating that the shipment had been handed over to the carrier.
+- 1 order had both order_delivered_carrier_date and order_delivered_customer_date missing.
+
+#### Canceled Orders with Recorded Customer Delivery Dates
+
+Six orders marked as canceled had a recorded order_delivered_customer_date. All six also had a recorded order_delivered_carrier_date.
+
+This suggests that the delivery process had progressed beyond the initial shipping stage, despite the final order status being canceled. Possible explanations include cancellations recorded after shipment or delivery, changes in order status, or inconsistencies in the source data.
