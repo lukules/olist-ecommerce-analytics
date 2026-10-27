@@ -494,12 +494,56 @@ ORDER BY missing_delivery_percentage DESC;
 As part of the data quality audit, records with potentially inconsistent order statuses and delivery dates were investigated.
 
 #### Delivered Orders with Missing Customer Delivery Dates
+```sql
+SELECT
+    order_id,
+    order_status,
+    order_purchase_timestamp,
+    order_delivered_carrier_date,
+    order_delivered_customer_date,
+    order_estimated_delivery_date
+FROM staging.orders
+WHERE order_status = 'delivered'
+  AND order_delivered_customer_date IS NULL;
+```
+
+| order_id | order_status | order_purchase_timestamp | order_delivered_carrier_date | order_delivered_customer_date | order_estimated_delivery_date |
+|---|---|---|---|---|---|
+| 2d1e2d5bf4dc7227b3bfebb81328c15f | delivered | 2017-11-28 17:44:07 | 2017-11-30 18:12:23 | NULL | 2017-12-18 00:00:00 |
+| f5dd62b788049ad9fc0526e3ad11a097 | delivered | 2018-06-20 06:58:43 | 2018-06-25 08:05:00 | NULL | 2018-07-16 00:00:00 |
+| 2ebdfc4f15f23b91474edf87475f108e | delivered | 2018-07-01 17:05:11 | 2018-07-03 13:57:00 | NULL | 2018-07-30 00:00:00 |
+| e69f75a717d64fc5ecdfae42b2e8e086 | delivered | 2018-07-01 22:05:55 | 2018-07-03 13:57:00 | NULL | 2018-07-30 00:00:00 |
+| 0d3268bad9b086af767785e3f0fc0133 | delivered | 2018-07-01 21:14:02 | 2018-07-03 09:28:00 | NULL | 2018-07-24 00:00:00 |
+| 2d858f451373b04fb5c984a1cc2defaf | delivered | 2017-05-25 23:22:43 | NULL | NULL | 2017-06-23 00:00:00 |
+| ab7c89dc1bf4a1ead9d6ec1ec8968a84 | delivered | 2018-06-08 12:09:39 | 2018-06-12 14:10:00 | NULL | 2018-06-26 00:00:00 |
+| 20edc82cf5400ce95e1afacc25798b31 | delivered | 2018-06-27 16:09:12 | 2018-07-03 19:26:00 | NULL | 2018-07-19 00:00:00 |
 
 Eight orders marked as delivered had a missing order_delivered_customer_date.
 - 7 orders had a recorded order_delivered_carrier_date, indicating that the shipment had been handed over to the carrier.
 - 1 order had both order_delivered_carrier_date and order_delivered_customer_date missing.
 
 #### Canceled Orders with Recorded Customer Delivery Dates
+```sql
+SELECT
+    order_id,
+    order_status,
+    order_purchase_timestamp,
+    order_delivered_carrier_date,
+    order_delivered_customer_date,
+    order_estimated_delivery_date
+FROM staging.orders
+WHERE order_status = 'canceled'
+  AND order_delivered_customer_date IS NOT NULL;
+```
+
+| order_id | order_status | order_purchase_timestamp | order_delivered_carrier_date | order_delivered_customer_date | order_estimated_delivery_date |
+|---|---|---|---|---|---|
+| 1950d777989f6a877539f53795b4c3c3 | canceled | 2018-02-19 19:48:52 | 2018-02-20 19:57:13 | 2018-03-21 22:03:51 | 2018-03-09 00:00:00 |
+| dabf2b0e35b423f94618bf965fcb7514 | canceled | 2016-10-09 00:56:52 | 2016-10-13 13:36:59 | 2016-10-16 14:36:59 | 2016-11-30 00:00:00 |
+| 770d331c84e5b214bd9dc70a10b829d0 | canceled | 2016-10-07 14:52:30 | 2016-10-11 15:07:11 | 2016-10-14 15:07:11 | 2016-11-29 00:00:00 |
+| 8beb59392e21af5eb9547ae1a9938d06 | canceled | 2016-10-08 20:17:50 | 2016-10-14 22:45:26 | 2016-10-19 18:47:43 | 2016-11-30 00:00:00 |
+| 65d1e226dfaeb8cdc42f665422522d14 | canceled | 2016-10-03 21:01:41 | 2016-10-25 12:14:28 | 2016-11-08 10:58:34 | 2016-11-25 00:00:00 |
+| 2c45c33d2f9cb8ff8b1c86cc28c11c30 | canceled | 2016-10-09 15:39:56 | 2016-10-14 10:40:50 | 2016-11-09 14:53:50 | 2016-12-08 00:00:00 |
 
 Six orders marked as canceled had a recorded order_delivered_customer_date. All six also had a recorded order_delivered_carrier_date.
 
