@@ -453,3 +453,39 @@ FROM staging.orders;
 | orders | order_delivered_customer_date | 2965 | 2.98 |
 | order_reviews | review_comment_message | 58247 | 58.70 |
 | order_reviews | review_comment_title | 87656 | 88.34 |
+
+#### Missing Delivery Dates
+The analysis of missing order_delivered_customer_date values revealed a strong relationship between delivery date completeness and order status.
+```sql 
+SELECT
+    order_status,
+    COUNT(*) AS total_orders,
+    COUNT(*) FILTER (
+        WHERE order_delivered_customer_date IS NULL
+    ) AS missing_delivery_date,
+    ROUND(
+        100.0 * COUNT(*) FILTER (
+            WHERE order_delivered_customer_date IS NULL
+        ) / NULLIF(COUNT(*), 0),
+        2
+    ) AS missing_delivery_percentage
+FROM staging.orders
+GROUP BY order_status
+ORDER BY missing_delivery_percentage DESC;
+```
+| order_status | total_orders | missing_delivery_date | missing_delivery_percentage |
+|---|---:|---:|---:|
+| shipped | 1107 | 1107 | 100.00 |
+| unavailable | 609 | 609 | 100.00 |
+| invoiced | 314 | 314 | 100.00 |
+| created | 5 | 5 | 100.00 |
+| approved | 2 | 2 | 100.00 |
+| processing | 301 | 301 | 100.00 |
+| canceled | 625 | 619 | 99.04 |
+| delivered | 96478 | 8 | 0.01 |
+
+- Orders that had not reached the delivered status: All orders with the statuses shipped, unavailable, invoiced, created, approved, and processing had missing customer delivery dates. This may be consistent with their stage in the order fulfillment process.
+
+- Canceled orders: 619 out of 625 canceled orders (99.04%) had no recorded customer delivery date. This is generally consistent with canceled orders not completing the delivery process. However, six canceled orders had a recorded delivery date and require further investigation.
+
+- Delivered orders: Only 8 out of 96,478 delivered orders (approximately 0.01%) had a missing customer delivery date. These records were identified as potential data quality anomalies because their status indicates that delivery was completed.
